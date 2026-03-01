@@ -1,6 +1,6 @@
 ---
 name: rule-python
-description: Required guidelines for any Python work including project creation, environment setup, and dependency management
+description: "MANDATORY rules for ALL Python work. MUST be loaded before any Python project creation, environment setup, dependency installation, or development. Non-negotiable conventions for package manager and project setup."
 user-invokable: false
 ---
 
