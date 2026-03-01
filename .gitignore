@@ -1,0 +1,9 @@
+# agent state and sessions
+.omc/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# etc
+report/
