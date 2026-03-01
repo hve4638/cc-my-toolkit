@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "hve-toolkit",
-      "source": ".",
+      "source": "./",
       "description": "Personal skill collection"
     }
   ]
