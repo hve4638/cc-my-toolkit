@@ -1,5 +1,5 @@
 ---
-name: commit-this
+name: commit-this-research
 disable-model-invocation: true
 ---
 
