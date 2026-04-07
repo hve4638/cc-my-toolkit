@@ -10,3 +10,6 @@ Thumbs.db
 
 # etc
 report/
+_ref/
+
+report.md
