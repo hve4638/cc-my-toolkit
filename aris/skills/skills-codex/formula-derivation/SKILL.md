@@ -1,6 +1,6 @@
 ---
 name: "formula-derivation"
-description: "Structure and derive research formulas when the user wants to 推导公式, derive a theory line, build equations from a problem statement, clarify assumptions, separate formal derivation from remarks, or turn messy theory notes into a paper-ready derivation skeleton. Use for research-style formula development, not for fully rigorous theorem proving once the claim is already fixed."
+description: "Structure and derive research formulas when the user wants to 수식 유도, derive a theory line, build equations from a problem statement, clarify assumptions, separate formal derivation from remarks, or turn messy theory notes into a paper-ready derivation skeleton. Use for research-style formula development, not for fully rigorous theorem proving once the claim is already fixed."
 ---
 
 # Formula Derivation

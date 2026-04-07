@@ -1,6 +1,6 @@
 ---
 name: paper-compile
-description: "Compile LaTeX paper to PDF, fix errors, and verify output. Use when user says \"编译论文\", \"compile paper\", \"build PDF\", \"生成PDF\", or wants to compile LaTeX into a submission-ready PDF."
+description: "Compile LaTeX paper to PDF, fix errors, and verify output. Use when user says \"논문 컴파일\", \"compile paper\", \"build PDF\", \"PDF 생성\", or wants to compile LaTeX into a submission-ready PDF."
 argument-hint: [paper-directory]
 allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob
 ---

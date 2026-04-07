@@ -1,6 +1,6 @@
 ---
 name: lit-novelty-check
-description: 최근 문헌 대비 연구 아이디어의 신규성 검증. "查新", "novelty check", "有没有人做过", "check novelty" 등의 요청 또는 구현 전 아이디어의 신규성을 확인하려 할 때 사용.
+description: 최근 문헌 대비 연구 아이디어의 신규성 검증. "신규성 확인", "novelty check", "기존 연구 있는지 확인", "check novelty" 등의 요청 또는 구현 전 아이디어의 신규성을 확인하려 할 때 사용.
 argument-hint: [method-or-idea-description]
 allowed-tools: WebSearch, WebFetch, Grep, Read, Glob, mcp__codex__codex
 ---
