@@ -1,5 +1,5 @@
 ---
-name: fsonl
+name: knowledge-fsonl
 description: Knowledge of fsonl
 ---
 

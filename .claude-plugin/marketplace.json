@@ -8,24 +8,19 @@
   },
   "plugins": [
     {
-      "name": "coding",
-      "source": "./coding",
-      "description": "Coding skills - commit, report, rules"
+      "name": "aris",
+      "source": "./aris",
+      "description": "ARIS (Autonomous Research In Sleep) - academic research automation skills"
     },
     {
       "name": "common",
       "source": "./common",
-      "description": "Common utility skills"
-    },
-    {
-      "name": "knowledge",
-      "source": "./knowledge",
-      "description": "Knowledge base skills"
+      "description": "Common utility skills - setup, docs, rules, commit, review"
     },
     {
       "name": "research",
       "source": "./research",
-      "description": "Research workflow skills"
+      "description": "Research workflow skills - journal, plan, report, commit"
     }
   ]
 }
