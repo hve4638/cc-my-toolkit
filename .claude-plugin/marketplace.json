@@ -1,5 +1,5 @@
 {
-  "name": "hve-toolkit",
+  "name": "hve",
   "owner": {
     "name": "hve4638"
   },
@@ -8,9 +8,24 @@
   },
   "plugins": [
     {
-      "name": "hve-toolkit",
-      "source": "./",
-      "description": "Personal skill collection"
+      "name": "coding",
+      "source": "./coding",
+      "description": "Coding skills - commit, report, rules"
+    },
+    {
+      "name": "common",
+      "source": "./common",
+      "description": "Common utility skills"
+    },
+    {
+      "name": "knowledge",
+      "source": "./knowledge",
+      "description": "Knowledge base skills"
+    },
+    {
+      "name": "research",
+      "source": "./research",
+      "description": "Research workflow skills"
     }
   ]
 }

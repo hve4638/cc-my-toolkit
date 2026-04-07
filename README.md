@@ -1,4 +1,4 @@
-# hve-toolkit
+# cc-plugin
 
 Claude Code용 개인 스킬 모음 플러그인.
 
@@ -6,10 +6,10 @@ Claude Code용 개인 스킬 모음 플러그인.
 
 ```bash
 # 1. 마켓플레이스 추가
-/plugin marketplace add https://github.com/hve4638/cc-my-toolkit
+/plugin marketplace add https://github.com/hve4638/hve-cc-marketplace
 
 # 2. 플러그인 설치
-/plugin install hve-toolkit@hve-toolkit
+/plugin install hve@hve-toolkit
 ```
 
 ## 갱신
