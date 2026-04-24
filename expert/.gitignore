@@ -1,0 +1,27 @@
+# Runtime state
+.omc/
+
+# Build dependencies
+node_modules/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.pyc

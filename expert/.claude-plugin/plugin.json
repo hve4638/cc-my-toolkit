@@ -1,0 +1,5 @@
+{
+  "name": "expert",
+  "version": "0.1.0",
+  "description": "Advanced/heavyweight tools and workflows for Claude Code (Python REPL, future ralph-like workflow skills)"
+}

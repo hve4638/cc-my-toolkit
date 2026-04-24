@@ -15,7 +15,22 @@
     {
       "name": "common",
       "source": "./common",
-      "description": "Common utility skills - setup, docs, rules, commit, review"
+      "description": "Common utility skills — setup, docs, rules, commit, review"
+    },
+    {
+      "name": "expert",
+      "source": "./expert",
+      "description": "Advanced/heavyweight tools — Python REPL MCP server (future ralph-like workflow skills)"
+    },
+    {
+      "name": "frame",
+      "source": "./frame",
+      "description": "Runtime framework — 19 general-purpose agents + hooks + MCP server (LSP + AST Grep tools)"
+    },
+    {
+      "name": "hud",
+      "source": "./hud",
+      "description": "Heads-Up Display statusline — live session state (git, todos, ctx%, agents, ralph, bg tasks)"
     },
     {
       "name": "research",
