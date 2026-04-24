@@ -12,6 +12,7 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 | [`hud`](./hud) | statusline — git/ctx%/rate-limit/모델명/subagent 트리 |
 | [`research`](./research) | 리서치 워크플로 (journal, plan, report, commit) |
 | [`aris`](./aris) | 학술 논문 자동화 (Autonomous Research In Sleep) |
+| [`wiki`](./wiki) | 영속 마크다운 지식 베이스 (`.wiki/`) — auto-capture + 세션 훅 3종 |
 
 ## 설치
 
@@ -26,6 +27,7 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 /plugin install hud@hve
 /plugin install research@hve
 /plugin install aris@hve
+/plugin install wiki@hve
 ```
 
 ## 설치 후 설정

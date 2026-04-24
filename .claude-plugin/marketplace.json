@@ -36,6 +36,11 @@
       "name": "research",
       "source": "./research",
       "description": "Research workflow skills - journal, plan, report, commit"
+    },
+    {
+      "name": "wiki",
+      "source": "./wiki",
+      "description": "Persistent markdown knowledge base (Karpathy LLM Wiki) — MCP tools + SessionStart/PreCompact/Stop hooks"
     }
   ]
 }
