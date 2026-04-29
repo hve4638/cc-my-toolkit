@@ -45,8 +45,9 @@ async function main() {
     return silent();
   }
 
-  // WHY: stop_hook_active 는 Stop 훅이 block 결정으로 유발한 continuation
-  //      에서 true 로 박힌다. patchwork 는 block 안 쓰지만 방어적으로 가드.
+  // WHY: stop_hook_active 는 block 결정으로 유발한 continuation 에서 true.
+  //      patchwork 는 1회 잔소리에 block 을 쓰므로 두 번째 진입은 차단해
+  //      loop 방지. stopHookFired 가 1차 가드, 이건 2차 가드.
   if (input.stop_hook_active === true) return silent();
   if (input.hook_event_name && input.hook_event_name !== 'Stop') return silent();
 
@@ -77,15 +78,12 @@ async function main() {
   //      false 로 리셋되어 새 작업 사이클에서 재발화 가능 (§10.4 참조).
   saveCache({ stopHookFired: true }, { projectRoot, sessionId: session_id });
 
-  // WHY: Stop 훅의 additionalContext 는 hookSpecificOutput 안에 wrap 한
-  //      형태로만 LLM prompt 에 주입된다 (frame context-guard-stop.mjs 패턴).
-  emit({
-    continue: true,
-    hookSpecificOutput: {
-      hookEventName: 'Stop',
-      additionalContext: buildAlert(stale),
-    },
-  });
+  // WHY: Stop 훅 스키마는 hookSpecificOutput 에 'Stop' 을 허용하지 않음
+  //      (validator: PreToolUse / UserPromptSubmit / PostToolUse / PostToolBatch
+  //      만 허용). 모델 컨텍스트로 주입하는 schema-valid 경로는
+  //      `decision: 'block'` + `reason` 뿐. stopHookFired + stop_hook_active
+  //      두 가드로 1회 발화만 보장하므로 사실상 1회 잔소리와 동치.
+  emit({ decision: 'block', reason: buildAlert(stale) });
 }
 
 main().catch(() => silent());
