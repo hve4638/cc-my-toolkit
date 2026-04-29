@@ -49,12 +49,12 @@ async function main() {
     return;
   }
 
+  // WHY: Stop 훅 스키마는 hookSpecificOutput.Stop 미지원. 본 훅은
+  //      block 회피가 명시 의도(BLOCK_WHEN_OVER=false) 라 decision:block
+  //      대신 systemMessage 로 사용자 UI 알림만.
   process.stdout.write(JSON.stringify({
     continue: true,
-    hookSpecificOutput: {
-      hookEventName: 'Stop',
-      additionalContext: reason,
-    },
+    systemMessage: reason,
   }));
 }
 

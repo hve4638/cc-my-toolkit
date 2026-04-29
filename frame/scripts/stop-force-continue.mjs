@@ -151,9 +151,12 @@ async function main() {
   if (total >= HARD_LIMIT) {
     deleteState(statePath);
     const note = hardStopNote(total);
+    // WHY: Stop 훅 스키마는 hookSpecificOutput.Stop 미지원. HARD_LIMIT 도달 시
+    //      force-continue 루프 자체를 끊는 게 의도라 decision:block 으로 깨우면
+    //      안 됨. systemMessage 로 사용자 UI 알림 + stderr 로깅만.
     process.stdout.write(JSON.stringify({
       continue: true,
-      hookSpecificOutput: { hookEventName: 'Stop', additionalContext: note },
+      systemMessage: note,
     }));
     process.stderr.write(`[force-continue] ${note}\n`);
     return;
