@@ -1,9 +1,14 @@
 # agent state and sessions
-.omc/
+**/.agent-memory/
+**/.claude/
+**/.omc/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# npm packages
+**/node_modules/
 
 # docs (local reference copies)
 .docs/
@@ -13,5 +18,7 @@ report/
 _ref/
 
 report.md
-
 .ko
+
+# logs
+hook-stop.log

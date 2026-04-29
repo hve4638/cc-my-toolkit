@@ -33,6 +33,11 @@
       "description": "Heads-Up Display statusline — live session state (git, todos, ctx%, agents, ralph, bg tasks)"
     },
     {
+      "name": "patchwork",
+      "source": "./patchwork",
+      "description": "Code-work methodology guardrail for context preservation — CONTEXT.md, WHY: comments, domain terms"
+    },
+    {
       "name": "research",
       "source": "./research",
       "description": "Research workflow skills - journal, plan, report, commit"
