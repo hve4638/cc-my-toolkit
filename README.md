@@ -8,6 +8,7 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 |---|---|
 | [`common`](./common) | 공통 유틸 스킬 (setup, docs, rules, commit/PR, review) |
 | [`frame`](./frame) | 런타임 프레임워크 — 범용 에이전트 19 + 훅 기반 규칙 리마인더·컨텍스트 가드 + MCP 서버 (LSP 12 + AST Grep 2) |
+| [`patchwork`](./patchwork) | 코드 작업 방법론 가드레일 — 컨텍스트 캡슐 (CONTEXT.md), 의도 주석 (`WHY:`), 도메인 용어 |
 | [`expert`](./expert) | 고급·특수 툴 — Python REPL MCP. 향후 ralph 같은 무거운 워크플로 스킬 예정 |
 | [`hud`](./hud) | statusline — git/ctx%/rate-limit/모델명/subagent 트리 |
 | [`research`](./research) | 리서치 워크플로 (journal, plan, report, commit) |
@@ -23,6 +24,7 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 # 2. 원하는 플러그인 설치
 /plugin install common@hve
 /plugin install frame@hve
+/plugin install patchwork@hve
 /plugin install expert@hve
 /plugin install hud@hve
 /plugin install research@hve
