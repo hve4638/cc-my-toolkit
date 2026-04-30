@@ -143,3 +143,13 @@ export function cleanupOrphans({ projectRoot, ttlMs = DEFAULT_TTL_MS }) {
 export function ensureCacheDir(projectRoot) {
   ensureDirSync(getCacheDir(projectRoot));
 }
+
+// WHY: hook payload.cwd 는 훅이 실제로 호출된 시점의 cwd 라 사용자 cd 나
+//      서브에이전트의 호출 위치에 휩쓸려 캐시가 디렉터리별로 흩어진다.
+//      CLAUDE_PROJECT_DIR 는 claude-code 가 세션 시작 시점에 박는
+//      프로젝트 루트 절대경로라 한 세션 동안 안정적이므로 우선시한다.
+export function resolveProjectRoot(hookInput) {
+  return process.env.CLAUDE_PROJECT_DIR
+    ?? hookInput?.cwd
+    ?? process.cwd();
+}

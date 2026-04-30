@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { compactReset, ensureCacheDir } from '../_build/src/lib/state-file.mjs';
+import { compactReset, ensureCacheDir, resolveProjectRoot } from '../_build/src/lib/state-file.mjs';
 
 function emit(obj) {
   process.stdout.write(JSON.stringify(obj));
@@ -27,7 +27,7 @@ async function main() {
   const { session_id, agent_id, cwd } = input;
   if (!session_id) return emit({ continue: true });
 
-  const projectRoot = cwd ?? process.cwd();
+  const projectRoot = resolveProjectRoot(input);
   ensureCacheDir(projectRoot);
   compactReset({ projectRoot, sessionId: session_id, agentId: agent_id });
   emit({ continue: true });

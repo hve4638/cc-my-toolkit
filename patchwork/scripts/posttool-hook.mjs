@@ -2,7 +2,7 @@
 import { readFileSync, statSync } from 'fs';
 import { basename, dirname, join, resolve } from 'path';
 import { createHash } from 'crypto';
-import { saveCache, ensureCacheDir } from '../_build/src/lib/state-file.mjs';
+import { saveCache, ensureCacheDir, resolveProjectRoot } from '../_build/src/lib/state-file.mjs';
 
 const INTERCEPT = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
@@ -61,7 +61,7 @@ async function main() {
   const filePath = extractPath(tool_name, tool_input);
   if (!filePath) return emit({ continue: true });
 
-  const projectRoot = cwd ?? process.cwd();
+  const projectRoot = resolveProjectRoot(input);
   ensureCacheDir(projectRoot);
   const ctx = { projectRoot, sessionId: session_id, agentId: agent_id };
   const resolved = resolve(filePath);

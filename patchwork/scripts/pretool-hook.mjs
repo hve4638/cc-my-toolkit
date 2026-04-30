@@ -7,6 +7,7 @@ import {
   cleanupOrphans,
   ownFileExists,
   ensureCacheDir,
+  resolveProjectRoot,
 } from '../_build/src/lib/state-file.mjs';
 
 const INTERCEPT = new Set(['Read', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
@@ -55,7 +56,7 @@ async function main() {
     return emit({ continue: true });
   }
 
-  const projectRoot = cwd ?? process.cwd();
+  const projectRoot = resolveProjectRoot(input);
   ensureCacheDir(projectRoot);
 
   // WHY: 메인 세션의 자기 캐시 파일이 아직 없을 때 = 세션의 첫 PreToolUse.

@@ -6,6 +6,7 @@ import {
   loadCacheForStop,
   saveCache,
   ensureCacheDir,
+  resolveProjectRoot,
 } from '../_build/src/lib/state-file.mjs';
 
 function emit(obj) {
@@ -96,7 +97,7 @@ async function main() {
   const { session_id, cwd } = input;
   if (!session_id) return silent();
 
-  const projectRoot = cwd ?? process.cwd();
+  const projectRoot = resolveProjectRoot(input);
   ensureCacheDir(projectRoot);
   const cache = loadCacheForStop({ projectRoot, sessionId: session_id });
 
