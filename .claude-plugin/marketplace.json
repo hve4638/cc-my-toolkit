@@ -33,6 +33,11 @@
       "description": "Heads-Up Display statusline — live session state (git, todos, ctx%, agents, ralph, bg tasks)"
     },
     {
+      "name": "oc-browser",
+      "source": "./oc-browser",
+      "description": "Isolated headed Chromium in Docker via `oc-as <name> browser <action>` — host/vnc/headless modes, per-project containers"
+    },
+    {
       "name": "patchwork",
       "source": "./patchwork",
       "description": "Code-work methodology guardrail for context preservation — CONTEXT.md, WHY: comments, domain terms"
