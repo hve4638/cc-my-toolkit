@@ -23,7 +23,7 @@ function parseFrontmatter(content) {
 }
 
 function readContext(dir) {
-  const file = join(dir, 'CONTEXT.md');
+  const file = join(dir, 'INLAY.md');
   let content;
   try {
     content = readFileSync(file, 'utf8');
@@ -79,7 +79,7 @@ function normalizeMcpPath(input) {
 }
 
 const server = new Server(
-  { name: 'patchwork', version: '0.1.0' },
+  { name: 'inlay', version: '0.1.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -88,7 +88,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'search',
       description:
-        'Find CONTEXT.md at the given path and its immediate children (depth ≤ 1). Deeper nesting is ignored. Returns name, purpose, path for each match.',
+        'Find INLAY.md at the given path and its immediate children (depth ≤ 1). Deeper nesting is ignored. Returns name, purpose, path for each match.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -107,7 +107,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: 'read_context',
       description:
-        'Read the CONTEXT.md ancestor chain from the given path up to filesystem root, top-down (root first). Returns a string of <patchwork-context path="...">...</patchwork-context> blocks. Stateful: a CONTEXT.md whose content is unchanged since it was last served in this MCP server process is rendered with body "(already read)".',
+        'Read the INLAY.md ancestor chain from the given path up to filesystem root, top-down (root first). Returns a string of <inlay-context path="...">...</inlay-context> blocks. Stateful: an INLAY.md whose content is unchanged since it was last served in this MCP server process is rendered with body "(already read)".',
       inputSchema: {
         type: 'object',
         properties: {
@@ -153,7 +153,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('patchwork MCP server running on stdio');
+  console.error('inlay MCP server running on stdio');
 }
 
 main().catch((e) => {

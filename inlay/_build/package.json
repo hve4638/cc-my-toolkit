@@ -1,7 +1,7 @@
 {
-  "name": "patchwork-plugin-build",
+  "name": "inlay-plugin-build",
   "version": "0.1.0",
-  "description": "Build workspace for patchwork MCP server (CONTEXT.md search)",
+  "description": "Build workspace for inlay MCP server (INLAY.md search)",
   "type": "module",
   "private": true,
   "scripts": {

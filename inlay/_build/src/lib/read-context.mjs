@@ -10,7 +10,7 @@ export function readContextChain(startDir, { cache }) {
   const entries = [];
   let dir = resolve(startDir);
   while (true) {
-    const ctxPath = join(dir, 'CONTEXT.md');
+    const ctxPath = join(dir, 'INLAY.md');
     let content;
     try {
       content = readFileSync(ctxPath, 'utf-8');
@@ -41,7 +41,7 @@ export function readContextChain(startDir, { cache }) {
 }
 
 function wrap(entry, body) {
-  return `<patchwork-context path="${entry.path}">\n${body}\n</patchwork-context>`;
+  return `<inlay-context path="${entry.path}">\n${body}\n</inlay-context>`;
 }
 
 export function formatForHook(entries) {

@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { atomicWriteFileSync, ensureDirSync } from './atomic-write.mjs';
 
-const CACHE_SUBDIR = '.agent-memory/patchwork-cache';
+const CACHE_SUBDIR = '.agent-memory/inlay-cache';
 
 // WHY: session_id = UUID v4, agent_id = 짧은 hex (≥6 자). 사용자가 수동으로
 //      둔 다른 *.json 파일은 cleanup 대상에서 제외해야 한다.
@@ -129,7 +129,7 @@ export function cleanupOrphans({ projectRoot, ttlMs = DEFAULT_TTL_MS }) {
   const cutoff = Date.now() - ttlMs;
   for (const name of entries) {
     // WHY: 화이트리스트로 가드 — 사용자가 수동으로 둔 .json 을
-    //      삭제하면 patchwork 가드를 넘어 데이터 손실로 이어진다.
+    //      삭제하면 inlay 가드를 넘어 데이터 손실로 이어진다.
     if (!FILE_PATTERN.test(name)) continue;
     const full = join(dir, name);
     try {

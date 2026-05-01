@@ -40,17 +40,17 @@ function runGit(cwd, args) {
   }
 }
 
-function getCapsuleDiff(capsuleRoot) {
-  // WHY: 캡슐 디렉토리가 git work tree 안일 때만 diff 노출. 외부면 skip.
-  const inside = runGit(capsuleRoot, ['rev-parse', '--is-inside-work-tree']);
+function getInlayDiff(inlayRoot) {
+  // WHY: inlay 디렉토리가 git work tree 안일 때만 diff 노출. 외부면 skip.
+  const inside = runGit(inlayRoot, ['rev-parse', '--is-inside-work-tree']);
   if (!inside || inside.trim() !== 'true') return null;
 
   // WHY: full diff 는 모델이 방금 자기가 만든 변경이라 본문 중복. 파일별
-  //      +/- 통계만 노출해 캡슐 내 변동 스코프만 알린다.
-  const stat = runGit(capsuleRoot, ['diff', '--stat', '--', '.']);
+  //      +/- 통계만 노출해 inlay 내 변동 스코프만 알린다.
+  const stat = runGit(inlayRoot, ['diff', '--stat', '--', '.']);
   // WHY: git diff 는 untracked 신규 파일을 못 잡으므로 ls-files --others
-  //      로 보완. 캡슐 안에 새로 생긴 파일도 변동 스코프의 일부.
-  const others = runGit(capsuleRoot, ['ls-files', '--others', '--exclude-standard', '--', '.']);
+  //      로 보완. inlay 안에 새로 생긴 파일도 변동 스코프의 일부.
+  const others = runGit(inlayRoot, ['ls-files', '--others', '--exclude-standard', '--', '.']);
 
   const blocks = [];
   if (stat != null && stat.length > 0) blocks.push(stat.replace(/\n+$/, ''));
@@ -62,18 +62,18 @@ function getCapsuleDiff(capsuleRoot) {
 
 function buildAlert(stale) {
   const lines = [
-    '[PATCHWORK ALERT] CONTEXT.md was not updated for the following capsule(s):',
+    '[INLAY ALERT] INLAY.md was not updated for the following inlay(s):',
     '',
     ...stale.map((p) => `- ${p}`),
     '',
-    'If your code change affects the capsule boundary, entry point, or domain terms, update CONTEXT.md. Otherwise ignore.',
+    'If your code change affects the inlay boundary, entry point, or domain terms, update INLAY.md. Otherwise ignore.',
   ];
 
   for (const ctxPath of stale) {
-    const capsuleRoot = dirname(ctxPath);
-    const diff = getCapsuleDiff(capsuleRoot);
+    const inlayRoot = dirname(ctxPath);
+    const diff = getInlayDiff(inlayRoot);
     if (diff == null) continue;
-    lines.push('', `[DIFF IN CAPSULE] ${capsuleRoot}`, diff);
+    lines.push('', `[DIFF IN INLAY] ${inlayRoot}`, diff);
   }
 
   return lines.join('\n');
@@ -89,7 +89,7 @@ async function main() {
   }
 
   // WHY: stop_hook_active 는 block 결정으로 유발한 continuation 에서 true.
-  //      patchwork 는 1회 잔소리에 block 을 쓰므로 두 번째 진입은 차단해
+  //      inlay 는 1회 잔소리에 block 을 쓰므로 두 번째 진입은 차단해
   //      loop 방지. stopHookFired 가 1차 가드, 이건 2차 가드.
   if (input.stop_hook_active === true) return silent();
   if (input.hook_event_name && input.hook_event_name !== 'Stop') return silent();
@@ -109,7 +109,7 @@ async function main() {
     try {
       mtime = statSync(ctxPath).mtimeMs;
     } catch {
-      // WHY: CONTEXT.md 가 사라졌으면 추적 항목 자체가 의미 없다. skip.
+      // WHY: INLAY.md 가 사라졌으면 추적 항목 자체가 의미 없다. skip.
       continue;
     }
     if (mtime === info.contextMtimeAtWrite) stale.push(ctxPath);

@@ -20841,7 +20841,7 @@ function readContextChain(startDir, { cache }) {
   const entries = [];
   let dir = (0, import_path.resolve)(startDir);
   while (true) {
-    const ctxPath = (0, import_path.join)(dir, "CONTEXT.md");
+    const ctxPath = (0, import_path.join)(dir, "INLAY.md");
     let content;
     try {
       content = (0, import_fs.readFileSync)(ctxPath, "utf-8");
@@ -20866,9 +20866,9 @@ function readContextChain(startDir, { cache }) {
   return entries.reverse();
 }
 function wrap(entry, body) {
-  return `<patchwork-context path="${entry.path}">
+  return `<inlay-context path="${entry.path}">
 ${body}
-</patchwork-context>`;
+</inlay-context>`;
 }
 function formatForMcp(entries) {
   const blocks = entries.map((e) => {
@@ -20894,7 +20894,7 @@ function parseFrontmatter(content) {
   return result;
 }
 function readContext(dir) {
-  const file2 = (0, import_node_path.join)(dir, "CONTEXT.md");
+  const file2 = (0, import_node_path.join)(dir, "INLAY.md");
   let content;
   try {
     content = (0, import_node_fs.readFileSync)(file2, "utf8");
@@ -20940,14 +20940,14 @@ function normalizeMcpPath(input) {
   }
 }
 var server = new Server(
-  { name: "patchwork", version: "0.1.0" },
+  { name: "inlay", version: "0.1.0" },
   { capabilities: { tools: {} } }
 );
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "search",
-      description: "Find CONTEXT.md at the given path and its immediate children (depth \u2264 1). Deeper nesting is ignored. Returns name, purpose, path for each match.",
+      description: "Find INLAY.md at the given path and its immediate children (depth \u2264 1). Deeper nesting is ignored. Returns name, purpose, path for each match.",
       inputSchema: {
         type: "object",
         properties: {
@@ -20965,7 +20965,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "read_context",
-      description: 'Read the CONTEXT.md ancestor chain from the given path up to filesystem root, top-down (root first). Returns a string of <patchwork-context path="...">...</patchwork-context> blocks. Stateful: a CONTEXT.md whose content is unchanged since it was last served in this MCP server process is rendered with body "(already read)".',
+      description: 'Read the INLAY.md ancestor chain from the given path up to filesystem root, top-down (root first). Returns a string of <inlay-context path="...">...</inlay-context> blocks. Stateful: an INLAY.md whose content is unchanged since it was last served in this MCP server process is rendered with body "(already read)".',
       inputSchema: {
         type: "object",
         properties: {
@@ -21009,7 +21009,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("patchwork MCP server running on stdio");
+  console.error("inlay MCP server running on stdio");
 }
 main().catch((e) => {
   console.error("Failed to start server:", e);

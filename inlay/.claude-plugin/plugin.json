@@ -1,7 +1,7 @@
 {
-  "name": "patchwork",
+  "name": "inlay",
   "version": "0.2.0",
-  "description": "Code-work methodology guardrail for context preservation — CONTEXT.md, WHY: comments, domain terms",
+  "description": "Code-work methodology guardrail for context preservation — INLAY.md, WHY: comments, domain terms",
   "author": {
     "name": "Hve"
   },

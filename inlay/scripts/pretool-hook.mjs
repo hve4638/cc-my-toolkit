@@ -49,10 +49,10 @@ async function main() {
   const filePath = extractPath(tool_name, tool_input);
   if (!filePath) return emit({ continue: true });
 
-  // WHY: CONTEXT.md 를 직접 수정하는 호출에서 chain 을 박으면 그 자기
+  // WHY: INLAY.md 를 직접 수정하는 호출에서 chain 을 박으면 그 자기
   //      본문이 prompt 에 또 들어가 의미상 순환이 생긴다. Read 는 본문
   //      만 보여주므로 정상 chain 으로 다룬다.
-  if (WRITE_TOOLS.has(tool_name) && basename(filePath) === 'CONTEXT.md') {
+  if (WRITE_TOOLS.has(tool_name) && basename(filePath) === 'INLAY.md') {
     return emit({ continue: true });
   }
 

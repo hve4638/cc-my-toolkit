@@ -33,7 +33,7 @@ function sha256(s) {
 function findNearestContext(startPath) {
   let dir = dirname(resolve(startPath));
   while (true) {
-    const candidate = join(dir, 'CONTEXT.md');
+    const candidate = join(dir, 'INLAY.md');
     try {
       if (statSync(candidate).isFile()) return candidate;
     } catch {
@@ -66,7 +66,7 @@ async function main() {
   const ctx = { projectRoot, sessionId: session_id, agentId: agent_id };
   const resolved = resolve(filePath);
 
-  if (basename(resolved) === 'CONTEXT.md') {
+  if (basename(resolved) === 'INLAY.md') {
     // WHY: PreToolUse 의 self-edit 가드가 chain emit 을 막았기 때문에
     //      hash 도 갱신되지 않은 상태. 여기서 직접 새 본문을 읽어 hash 를
     //      박아야 다음 PreToolUse 가 silent skip 으로 빠진다.

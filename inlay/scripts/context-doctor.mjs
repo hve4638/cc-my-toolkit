@@ -6,7 +6,7 @@ const SKIP_DIRS = new Set(['.git', 'node_modules']);
 const BODY_LIMIT = 300;
 const REQUIRED_SCALARS = ['name', 'purpose', 'entry'];
 
-function findContextFiles(root) {
+function findInlayFiles(root) {
   const out = [];
   const stack = [root];
   while (stack.length) {
@@ -21,7 +21,7 @@ function findContextFiles(root) {
       if (e.isDirectory()) {
         if (SKIP_DIRS.has(e.name)) continue;
         stack.push(join(dir, e.name));
-      } else if (e.isFile() && e.name === 'CONTEXT.md') {
+      } else if (e.isFile() && e.name === 'INLAY.md') {
         out.push(join(dir, e.name));
       }
     }
@@ -98,11 +98,11 @@ function check(path) {
 const FRONTMATTER_INSTRUCTION = [
   '## frontmatter 오류',
   '',
-  '해당 캡슐의 작업을 중단하고 먼저 복구한다. CONTEXT.md frontmatter 는 4 필드 고정:',
+  '해당 inlay 의 작업을 중단하고 먼저 복구한다. INLAY.md frontmatter 는 4 필드 고정:',
   '',
   '```',
   '---',
-  'name: <캡슐명>',
+  'name: <inlay 이름>',
   'purpose: <한 줄 요약>',
   'entry: <진입점 경로>            # 단일 파일',
   'entry: [<경로>, <경로>, ...]    # 다중 파일',
@@ -112,7 +112,7 @@ const FRONTMATTER_INSTRUCTION = [
   '---',
   '```',
   '',
-  '`when` 은 1~3 bullet 권유 — 더 많이 써야 한다면 캡슐 책임이 비대하다는 신호로 분할 검토.',
+  '`when` 은 1~3 bullet 권유 — 더 많이 써야 한다면 inlay 책임이 비대하다는 신호로 분할 검토.',
   '',
   '복구 후 doctor 를 다시 돌려 위반이 사라진 것을 확인하고 본 작업을 시작.',
 ].join('\n');
@@ -120,13 +120,13 @@ const FRONTMATTER_INSTRUCTION = [
 const SPLIT_INSTRUCTION = [
   '## 본문 300줄 초과 — 분할 트리거',
   '',
-  '해당 캡슐은 **자식 캡슐로 분할** 한다. 일부 영역을 자식 디렉토리로 떼어내고, 그 영역에 새 CONTEXT.md 를 만들어 그 영역의 도메인 용어를 자식이 가져가게 한다. 부모는 자식의 진입점만 남으므로 가벼워진다.',
+  '해당 inlay 는 **자식 inlay 로 분할** 한다. 일부 영역을 자식 디렉토리로 떼어내고, 그 영역에 새 INLAY.md 를 만들어 그 영역의 도메인 용어를 자식이 가져가게 한다. 부모는 자식의 진입점만 남으므로 가벼워진다.',
   '',
   '단 **변경과 분할을 한 번에 섞지 않는다** — 현재 작업이 진행 중이면 그대로 끝내고, 분할은 별 작업으로 처리. 작업 종료 시 사용자에게 분할 필요를 알리는 것으로 충분.',
 ].join('\n');
 
 const root = resolve(process.argv[2] || '.');
-const files = findContextFiles(root);
+const files = findInlayFiles(root);
 const issues = [];
 let hasFrontmatter = false;
 let hasOversize = false;
@@ -139,15 +139,15 @@ for (const f of files) {
 }
 
 if (issues.length === 0) {
-  console.log('No CONTEXT.md violations found.');
+  console.log('No INLAY.md violations found.');
 } else {
   for (const line of issues) console.log(line);
   console.log('');
-  console.log('<patchwork-instruction>');
+  console.log('<inlay-instruction>');
   const blocks = [];
   if (hasFrontmatter) blocks.push(FRONTMATTER_INSTRUCTION);
   if (hasOversize) blocks.push(SPLIT_INSTRUCTION);
   console.log(blocks.join('\n\n'));
-  console.log('</patchwork-instruction>');
+  console.log('</inlay-instruction>');
 }
 process.exit(0);

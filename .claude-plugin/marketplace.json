@@ -38,9 +38,9 @@
       "description": "Isolated headed Chromium in Docker via `oc-as <name> browser <action>` — host/vnc/headless modes, per-project containers"
     },
     {
-      "name": "patchwork",
+      "name": "inlay",
       "source": "./patchwork",
-      "description": "Code-work methodology guardrail for context preservation — CONTEXT.md, WHY: comments, domain terms"
+      "description": "Code-work methodology guardrail for context preservation — INLAY.md, WHY: comments, domain terms"
     },
     {
       "name": "research",
