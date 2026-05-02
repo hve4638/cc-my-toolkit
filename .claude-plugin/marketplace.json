@@ -39,7 +39,7 @@
     },
     {
       "name": "inlay",
-      "source": "./patchwork",
+      "source": "./inlay",
       "description": "Code-work methodology guardrail for context preservation — INLAY.md, WHY: comments, domain terms"
     },
     {
