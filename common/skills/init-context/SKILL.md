@@ -1,114 +1,265 @@
 ---
 name: init-context
-description: "Generate a project-specific CLAUDE.md. Scans every fragment under `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/` directly, reads the frontmatter (name, description, condition), and matches conditions against codebase/environment signals to shortlist candidates. Synthesizes and finalizes after user confirmation. Trigger examples: '/init-context', 'create CLAUDE.md', 'initialize project context'. Explicit invocation only — no auto-trigger. See `${CLAUDE_PLUGIN_ROOT}/skills/init-context/README.md` for design intent and the fragment authoring spec."
+disable-model-invocation: true
+description: "Use this skill via `/init-context` to (re)generate a CLAUDE.md by composing the master skeleton, every active hve plugin's `docs/AGENTS.partial.md`, and selected rule/lang fragments. Run it when bootstrapping or refreshing project/global agent context to avoid hand-maintained drift, missed plugin guidance, and stale agent-routing tables. Idempotent via SHA-256 input hashing; writes `~/.claude/CLAUDE.md` (Global) or `<cwd>/CLAUDE.md` (Project)."
 ---
 
 <init_context_instruction>
 # init-context
 
-Build CLAUDE.md in 6 stages: Scan → Match → Confirm → Synthesize → Conflict check → Finalize.
+Generate `~/.claude/CLAUDE.md` (Global mode) or `<cwd>/CLAUDE.md` (Project mode) by composing the master skeleton, each active plugin's `docs/AGENTS.partial.md`, and the user's selected rule-* / lang-* fragments. Do the synthesis directly without delegating to a sub-agent.
 
 ---
 
-## Inputs and outputs
+## 1. Mode selection
 
-- Fragment source: `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/*.md` only. Do not author new fragments outside this folder. The SKILL reads this folder fresh on every invocation — do not hardcode fragment names into the SKILL body.
-- Intermediate output: `CLAUDE.draft.md` at each output path.
-- Final output: `CLAUDE.md` at the project root. When multi-language distribution applies, additional `CLAUDE.md` files may be produced under subdirectories (see `lang-*` special rule).
-- Backup policy: applied identically at each output path. If a `CLAUDE.md` already exists, move it to `CLAUDE.md.bak` at the same path immediately before stage 6 (no overwrite). If `CLAUDE.md.bak` already exists, ask the user how to proceed.
+If `process.cwd() === os.homedir()` matches exactly, enter **Global mode automatically**. Otherwise let the user pick via AskUserQuestion.
 
----
-
-## Prefix categories
-
-- `lang-*` — language/runtime conventions.
-- `rule-*` — coding discipline, guides, methodologies.
-
-The SKILL uses these two prefixes to drive synthesis group order and the `lang-*` special rule.
+Options:
+- `Global`: inject the active hve plugin guides into `~/.claude/CLAUDE.md`
+- `Project`: synthesize project context into `<cwd>/CLAUDE.md`
 
 ---
 
-## 1. Scan
+## 2. Plugin discovery + interview
 
-Read every file under `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/*.md` and collect each fragment's `condition`. Derive the signal categories those conditions commonly require, then collect them in one pass. Read-only tools only.
+### Discovery (script)
 
-Signal categories (illustrative — collect only what the fragment conditions actually demand):
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/init-context/scripts/detect-active-plugins.mjs" --mode=<global|project>
+```
 
-- Codebase — file extension distribution, manifests, lockfiles, directory structure.
-- Active environment — currently available SKILLs, active plugins.
+Script emits JSON: `[{name, owner, installPath, hasPartial}, ...]`
 
-Summarize the collected signals in 5 lines or fewer for the user.
+Internal matching:
+- `Global`: merge `enabledPlugins` from `~/.claude/settings.json` + `~/.claude/settings.local.json` → match in `~/.claude/plugins/installed_plugins.json` where `scope === "user"`
+- `Project`: merge `enabledPlugins` from `<cwd>/.claude/settings.json` + `<cwd>/.claude/settings.local.json` (empty if absent) → match in `installed_plugins.json` where `(scope === "project" || scope === "local")` AND `projectPath === <cwd>`
 
----
+Only entries with `hasPartial === true` are eligible synthesis candidates.
 
-## 2. Match
+### Interview
 
-Classify each fragment into one of three buckets.
+Present candidates via AskUserQuestion (multiSelect). The user picks which to include in synthesis.
 
-- Match — `condition` is satisfied by the signals → automatic candidate.
-- No match — `condition` clearly contradicts the signals → automatically excluded (do not ask the user).
-- Needs confirmation — one of:
-  - The fragment has no `condition` key (always decided by user intent).
-  - The `condition` match is ambiguous.
-
-### `lang-*` special rule
-
-- `lang-*` fragments are candidates only for coding-centric projects (otherwise auto-excluded).
-- If two or more `lang-*` fragments match, inspect the codebase's language distribution.
-  - Roughly balanced ratio with both languages spread across the codebase → synthesize all into the root CLAUDE.md.
-  - One language dominates and the non-dominant language is concentrated in a specific subdirectory → put the dominant language in the root CLAUDE.md and the non-dominant language in that subdirectory's CLAUDE.md.
-  - If neither case clearly applies, ask the user once how to distribute.
-
-This branching can yield N outputs (1 root + 0..M subdirectories). Stages 4–6 repeat identically for each output.
+If the candidate list is empty, skip this stage (proceed without plugin content).
 
 ---
 
-## 3. Confirm
+## 3. Rule interview
 
-Show the user the matched + ambiguous fragments together in a single table and ask whether to apply each one. Columns: fragment `name`, `description`, match status, match reasoning.
-
-Auto-excluded fragments are not listed in the table — only note "(N excluded automatically)" in the summary line.
-
-When the user toggles, adds, or removes entries, the result is the final selection set.
+Scan `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/rule-*.md` directly. Use each fragment's `description` as the option label and present via AskUserQuestion (multiSelect). **Ignore `condition`** — let the user choose freely.
 
 ---
 
-## 4. Synthesize
+## 4. Lang interview
 
-Concatenate the selected fragments in the prescribed order to produce `CLAUDE.draft.md`.
+### Global mode
 
-- **Do not modify fragment bodies.** Strip only the frontmatter (`---` block) and copy the body verbatim. This is what makes CLAUDE.md re-synthesis idempotent when fragments are updated.
-- Group order: `lang-*` → `rule-*`. Within a group, sort alphabetically by filename.
-- When concatenating, insert exactly one `\n` between fragments. Whitespace normalization happens in stage 6.
-- Heading collisions are handled in stage 5. Leave them as-is here.
-- Top header: place `# CLAUDE.md` on the first line of the file.
+AskUserQuestion (single-select):
+- `Skip`: print one-line note ("Recommend keeping lang rules per-project")
+- `Add to global CLAUDE.md`: multiSelect over all `lang-*` fragments
 
----
+### Project mode
 
-## 5. Conflict check
+#### 4-1. Codebase language detection (script)
 
-Re-read `CLAUDE.draft.md` and look for contradictions.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/init-context/scripts/detect-languages.mjs"
+```
 
-- Directive conflict — one fragment mandates a tool while another uses an example referencing a different tool, etc.
-- Tone conflict — one fragment is a strict guardrail while another is advisory on the same axis.
-- Duplicate content — two fragments cover the same topic with different wording.
+JSON output: `[{lang, evidence, fragmentName}, ...]` (e.g., `[{lang:"python", evidence:"pyproject.toml + 23 *.py", fragmentName:"lang-python"}]`)
 
-Ask the user once for a decision on any conflict found (no automatic decisions). If there are no conflicts, proceed to stage 6.
+#### 4-2. Report + selection
 
----
-
-## 6. Finalize
-
-1. If `CLAUDE.md` already exists, move it to `CLAUDE.md.bak` (if `CLAUDE.md.bak` already exists, ask the user how to handle it).
-2. Normalize whitespace in `CLAUDE.draft.md`: collapse consecutive blank lines to one, ensure the file ends with exactly one newline.
-3. Rename `CLAUDE.draft.md` to `CLAUDE.md`.
-4. Report the result to the user in one line: which fragments were included, and the backup file path.
+Report detected languages in 1–2 lines. Then AskUserQuestion (single-select):
+- `Add detected language rules`: include every detected `lang-*` automatically
+- `Skip`
+- `Choose manually`: multiSelect over all `lang-*` fragments
 
 ---
 
-## Empty result handling
+## 5. Conflict check (policy-only)
 
-If the match stage yields zero matched + ambiguous fragments, do not synthesize — report to the user in one line. Do not produce an empty CLAUDE.md.
+Inspect each selected fragment's frontmatter `conflicts_with` and check pairwise:
+- No match → proceed.
+- Match found → ask the user once via AskUserQuestion and let them resolve (no automatic resolution).
+
+Tone or duplicate-content conflicts are not checked — policy conflicts only.
+
+---
+
+## 6. Synthesis
+
+### 6-1. Load the master skeleton
+
+Read `${CLAUDE_PLUGIN_ROOT}/skills/init-context/AGENTS.skeleton.md` to determine tag order.
+
+### 6-2. Collect plugin content
+
+For each selected plugin, read `<installPath>/docs/AGENTS.partial.md` and split it by XML tag.
+
+### 6-3. Same-tag merging
+
+Following the master tag order:
+- Gather contributions from multiple plugins for the same tag into one section.
+- Order within a tag is your discretion. Decide by logical grouping and importance.
+- Tags with no contributor remain as placeholder comments to preserve their slot.
+  ```
+  <!-- <skills></skills> -->
+  ```
+
+### 6-4. Rule / lang sections
+
+```
+# Rules
+
+## <fragment name>
+(fragment body, frontmatter stripped)
+
+# Languages
+
+## <fragment name>
+(fragment body, frontmatter stripped)
+```
+
+### 6-5. Compute input hash
+
+Serialize the following as canonical JSON, then SHA-256:
+```json
+{
+  "plugins": [{name, installPath, partialBody}, ...],
+  "selections": {
+    "plugins": [...selected names],
+    "rules": [...selected fragment names],
+    "langs": [...selected fragment names]
+  }
+}
+```
+
+Compute via Bash:
+```bash
+echo -n '<serialized JSON>' | sha256sum
+```
+
+Or write to a temp file and run `sha256sum <file>`.
+
+---
+
+## 7. Idempotency check
+
+Extract the existing output's `<!-- HVE:HASH:sha256-... -->` — **use `cat`** (the Read tool strips HTML comments).
+
+```bash
+cat ~/.claude/CLAUDE.md  # or ./CLAUDE.md
+```
+
+Compare:
+- Hashes match → report "no changes" and exit. Skip writing.
+- Hashes differ (or no marker exists) → proceed to output.
+
+---
+
+## 8. Output
+
+### 8-1. Backup
+
+If the output file exists, move it to a `.bak` sibling:
+- `~/.claude/CLAUDE.md` → `~/.claude/CLAUDE.md.bak`
+- `<cwd>/CLAUDE.md` → `<cwd>/CLAUDE.md.bak`
+
+If the `.bak` already exists, ask via AskUserQuestion how to handle it (overwrite / different name / abort).
+
+### 8-2. Global mode — marker block
+
+```
+<!-- HVE:START -->
+<!-- HVE:VERSION:1 -->
+<!-- HVE:GENERATED-AT:<ISO-8601 UTC> -->
+<!-- HVE:PLUGINS: <name1>, <name2>, ... -->
+<!-- HVE:HASH:sha256-<hex> -->
+
+# hve marketplace
+
+(XML tag synthesis body — master order)
+
+# Rules
+
+(rule body)
+
+# Languages
+
+(lang body, if selected)
+
+<!-- HVE:END -->
+```
+
+Block placement:
+- No existing marker (or no file) → **prepend at the top of the file** (or create a new file containing only the marker block)
+- Existing marker → keep marker position, replace only the content inside. Preserve user content above and below the marker.
+
+### 8-3. Project mode — whole file
+
+```
+# CLAUDE.md
+
+<!-- HVE:VERSION:1 -->
+<!-- HVE:GENERATED-AT:<ISO-8601 UTC> -->
+<!-- HVE:PLUGINS: ... -->
+<!-- HVE:HASH:sha256-... -->
+
+(XML tag synthesis body)
+
+# Rules
+...
+
+# Languages
+...
+```
+
+Replace the entire file.
+
+---
+
+## 9. Report
+
+One- or two-line summary:
+- Mode (Global / Project)
+- Number of plugins, rules, langs included
+- Backup path (if any)
+- Whether the body changed (wrote vs skipped)
+
+---
+
+## Reading the original — `cat` required
+
+When inspecting the marker or meta comments of an existing output, the **Read tool strips HTML comments**. **Use Bash `cat`.**
+
+```bash
+cat ~/.claude/CLAUDE.md
+cat ./CLAUDE.md
+```
+
+Node scripts use `fs.readFile` directly and are not affected.
+
+---
+
+## Empty-result handling
+
+If plugins, rules, and langs are all 0, the synthesis body is nothing but placeholder comments. In that case:
+- One-line report: "No content selected; nothing to write."
+- Skip writing.
+
+---
+
+## Caveats
+
+Content inside the marker block is overwritten on the next run. Tell the user to keep manual notes outside the marker.
+
+When `cwd === os.homedir()` the skill always enters Global mode. Project mode cannot be selected from the home directory.
+
+XML tags follow a simple convention only. Nesting, attributes, and CDATA are not parsed.
+
+Within-tag ordering is your discretion, so output may differ slightly between runs. The idempotency check is input-hash based, so write-skip behavior is unaffected.
 
 </init_context_instruction>
 

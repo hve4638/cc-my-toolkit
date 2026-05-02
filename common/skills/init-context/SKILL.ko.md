@@ -1,98 +1,265 @@
 ---
 name: init-context
-description: "프로젝트 전용 CLAUDE.md 를 생성한다. `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/` 의 모든 fragment 를 직접 스캔해 frontmatter (name, description, condition) 를 읽고, condition 을 코드베이스·환경 신호와 대조해 적용 후보를 추린다. 사용자 컨펌을 거쳐 합성·확정한다. 트리거 예: '/init-context', 'CLAUDE.md 만들어줘', '프로젝트 컨텍스트 초기화'. 명시 호출 전용. 자동 트리거 금지. 설계 의도와 fragment 작성 규약은 `${CLAUDE_PLUGIN_ROOT}/skills/init-context/README.md` 참조."
+disable-model-invocation: true
+description: "Use this skill via `/init-context` to (re)generate a CLAUDE.md by composing the master skeleton, every active hve plugin's `docs/AGENTS.partial.md`, and selected rule/lang fragments. Run it when bootstrapping or refreshing project/global agent context to avoid hand-maintained drift, missed plugin guidance, and stale agent-routing tables. Idempotent via SHA-256 input hashing; writes `~/.claude/CLAUDE.md` (Global) or `<cwd>/CLAUDE.md` (Project)."
 ---
 
 <init_context_instruction>
 # init-context
 
-탐색 → 매칭 → 컨펌 → 합성 → 충돌 검사 → 확정 6단계로 CLAUDE.md 를 만든다.
-
-## 입력과 산출물
-
-- fragment 소스: `${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/*.md` 만 사용. 외부에서 새 fragment 를 만들지 않는다. SKILL 은 이 폴더를 매 호출마다 직접 읽는다 — fragment 이름을 SKILL 본문에 하드코딩하지 않는다.
-- 중간 산출물: 각 산출물 경로의 `CLAUDE.draft.md`
-- 최종 산출물: 프로젝트 루트의 `CLAUDE.md`. 멀티 언어 분배가 적용되면 서브디렉터리에도 추가 `CLAUDE.md` 가 생길 수 있다 (`lang-*` 특별 규약 참조).
-- 백업 정책: 각 산출물 경로에 동일 적용. 기존 `CLAUDE.md` 가 있으면 6단계 직전에 같은 경로의 `CLAUDE.md.bak` 으로 이동 (덮어쓰기 금지). `CLAUDE.md.bak` 이 이미 있으면 사용자에게 어떻게 할지 묻는다.
-
-## prefix 카테고리
-
-- `lang-*` — 언어/런타임 환경 규약.
-- `rule-*` — 코딩 규율, 가이드, 메소드.
-
-SKILL 은 이 prefix 두 개로 합성 그룹 순서와 lang 특별 규약을 적용한다.
-
-## 1. 탐색
-
-`${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/*.md` 를 모두 읽어 각 fragment 의 `condition` 을 수집한다. 그 condition 들이 공통으로 요구하는 신호 카테고리를 추려 한 번에 수집한다. 읽기 전용 도구만 사용한다.
-
-신호 카테고리 (예시 — fragment condition 이 요구하는 만큼만 수집):
-
-- 코드베이스 — 파일 확장자 분포, 매니페스트, 락파일, 디렉터리 구조
-- 활성 환경 — 현재 사용 가능한 SKILL 목록, 활성 플러그인
-
-수집 결과를 5줄 이내로 요약해 사용자에게 보여준다.
-
-## 2. 매칭
-
-각 fragment 를 다음 셋 중 하나로 분류한다.
-
-- 부합 — `condition` 이 신호를 만족 → 자동 후보
-- 미부합 — `condition` 이 신호와 명백히 어긋남 → 자동 제외 (사용자에게 묻지 않음)
-- 사용자 컨펌 — 다음 중 하나:
-  - `condition` 키가 없는 fragment (항상 사용자 의사로 결정되는 부류)
-  - `condition` 매칭 결과가 모호한 경우
-
-### lang-* 특별 규약
-
-- `lang-*` 은 코딩 위주 프로젝트일 때만 후보가 된다 (그 외엔 자동 제외).
-- 부합한 `lang-*` 가 둘 이상이면 코드베이스의 언어 분포를 본다.
-  - 비율이 비등하고 두 언어가 코드베이스 전반에 퍼져있다 → 모두 root CLAUDE.md 에 합성한다.
-  - 한 언어가 지배적이고 비지배 언어가 특정 서브디렉터리에 모여있다 → 지배 언어는 root CLAUDE.md 에, 비지배 언어는 그 서브디렉터리의 CLAUDE.md 에 분리 합성한다.
-  - 위 두 케이스에 명확히 들어맞지 않으면 사용자에게 분배 방식을 1회 질문한다.
-
-이 분기로 산출물이 N 개 (root 1 + 서브디렉터리 0..M) 가 될 수 있다. 4~6 단계는 각 산출물에 대해 동일하게 반복한다.
-
-## 3. 컨펌
-
-부합 + 불확실 fragment 를 표 형태로 사용자에게 한 번에 묶어 보여주고, 각각 적용할지 묻는다. 표는 fragment 의 `name`, `description`, 매칭 상태, 매칭 근거를 컬럼으로 가진다.
-
-미부합으로 자동 제외된 fragment 는 표에 넣지 않되, 결과 요약 줄에 "(N 개 자동 제외)" 만 명시.
-
-사용자가 일부만 토글하거나 추가/제거하면 그 결과로 최종 선택 집합 확정.
-
-## 4. 합성
-
-선택된 fragment 를 정해진 순서로 이어붙여 `CLAUDE.draft.md` 를 작성한다.
-
-- **fragment 본문은 변형하지 않는다.** frontmatter (`---` 블록) 만 제거하고 본문을 그대로 옮긴다. 이렇게 해야 fragment 갱신 시 CLAUDE.md 재합성이 idempotent 해진다.
-- 그룹 순서: `lang-*` → `rule-*`. 그룹 내 정렬: 파일명 알파벳 순.
-- 이어붙일 때 fragment 사이에 `\n` 1개만 넣는다. 공백 정규화는 6단계에서 한다.
-- 헤더 충돌은 5단계에서 잡는다. 이 단계에서는 그대로 둔다.
-- 상단 머리말: 파일 첫 줄에 `# CLAUDE.md` 을 넣는다.
-
-## 5. 충돌 검사
-
-`CLAUDE.draft.md` 를 다시 읽어 모순을 찾는다.
-
-- 명령 충돌 — 한 fragment 가 어떤 도구를 강제하는데 다른 fragment 가 다른 도구의 예제를 사용하는 등
-- 톤 충돌 — 한 fragment 는 엄격한 가드레일, 다른 fragment 는 권고 수준인데 같은 축에서 충돌하는 경우
-- 내용 중복 — 두 fragment 가 같은 주제를 다른 표현으로 반복하는 경우
-
-발견된 충돌은 사용자에게 1회만 질문해 결정한다 (자동 결정 금지). 충돌이 없으면 6단계로.
+`~/.claude/CLAUDE.md` (Global 모드) 또는 `<cwd>/CLAUDE.md` (Project 모드) 를 마스터 골격 + 활성 플러그인의 `docs/AGENTS.partial.md` + 사용자가 선택한 rule-* / lang-* fragment 로 합성해 만든다. sub-agent 에 위임하지 않고 직접 작성한다.
 
 ---
 
-## 6. 확정
+## 1. 모드 결정
 
-1. 기존 `CLAUDE.md` 가 있으면 `CLAUDE.md.bak` 으로 이동 (`CLAUDE.md.bak` 이 이미 있으면 사용자에게 처리 방법 질문).
-2. `CLAUDE.draft.md` 의 공백을 정규화한다: 연속된 빈 줄은 1개로 압축, 파일 끝은 newline 1개로 통일.
-3. `CLAUDE.draft.md` 를 `CLAUDE.md` 로 rename.
-4. 사용자에게 결과를 1줄로 보고: 어떤 fragment 가 포함됐는지, 백업 파일 경로.
+`process.cwd() === os.homedir()` 정확 일치 시 **자동 Global**. 그 외엔 AskUserQuestion 으로 사용자 선택.
+
+옵션:
+- `Global`: `~/.claude/CLAUDE.md` 에 활성 hve 플러그인 가이드 주입
+- `Project`: `<cwd>/CLAUDE.md` 에 프로젝트 컨텍스트 합성
+
+---
+
+## 2. 플러그인 검출 + 인터뷰
+
+### 검출 (스크립트)
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/init-context/scripts/detect-active-plugins.mjs" --mode=<global|project>
+```
+
+스크립트가 JSON 으로 출력: `[{name, owner, installPath, hasPartial}, ...]`
+
+내부 매칭 규칙:
+- `Global`: `~/.claude/settings.json` + `~/.claude/settings.local.json` 의 `enabledPlugins` 머지 → `~/.claude/plugins/installed_plugins.json` 에서 `scope === "user"` 매칭
+- `Project`: `<cwd>/.claude/settings.json` + `<cwd>/.claude/settings.local.json` 머지 (없으면 빈 목록) → `installed_plugins.json` 에서 `(scope === "project" || scope === "local")` AND `projectPath === <cwd>` 매칭
+
+`hasPartial === true` 인 플러그인만 합성 후보.
+
+### 인터뷰
+
+후보를 AskUserQuestion (multiSelect) 로 제시. 사용자가 합성에 포함할 것 선별.
+
+후보 0 개면 이 단계 skip (플러그인 컨텐츠 없이 진행).
+
+---
+
+## 3. rule 인터뷰
+
+`${CLAUDE_PLUGIN_ROOT}/skills/init-context/fragments/rule-*.md` 전체를 직접 스캔. 각 fragment 의 `description` 을 라벨로 AskUserQuestion (multiSelect) 제시. **condition 무시** — 사용자가 자유 선택.
+
+---
+
+## 4. lang 인터뷰
+
+### Global 모드
+
+AskUserQuestion (단일):
+- `적용 안 함`: 권고문 1줄 출력 ("각 프로젝트의 CLAUDE.md 에 두는 것을 권장")
+- `Global CLAUDE.md 에 추가`: 전체 lang-* fragment multiSelect
+
+### Project 모드
+
+#### 4-1. 코드베이스 언어 탐색 (스크립트)
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/init-context/scripts/detect-languages.mjs"
+```
+
+JSON 출력: `[{lang, evidence, fragmentName}, ...]` (예: `[{lang:"python", evidence:"pyproject.toml + 23 *.py", fragmentName:"lang-python"}]`)
+
+#### 4-2. 사용자에게 보고 + 선택
+
+발견된 언어를 1~2줄로 보고. AskUserQuestion (단일):
+- `발견된 언어 규칙 추가`: 발견된 모든 lang-* fragment 자동 포함
+- `추가 안 함`
+- `직접 선택`: 전체 lang-* fragment multiSelect
+
+---
+
+## 5. 충돌 검사 (정책 기반)
+
+선택된 fragment 들의 frontmatter `conflicts_with` 상호 매칭 검사:
+- 매칭 없음 → 다음 단계
+- 매칭 있음 → AskUserQuestion 으로 1회 질문, 사용자 결정 후 진행 (자동 결정 금지)
+
+톤·중복 충돌은 검사 안 함 — 정책 충돌만.
+
+---
+
+## 6. 합성
+
+### 6-1. 마스터 골격 (skeleton) 로드
+
+`${CLAUDE_PLUGIN_ROOT}/skills/init-context/AGENTS.skeleton.md` 읽어 태그 순서 결정.
+
+### 6-2. 플러그인 컨텐츠 수집
+
+선택된 각 플러그인의 `<installPath>/docs/AGENTS.partial.md` 읽어 XML 태그별로 분해.
+
+### 6-3. Same-tag 합성
+
+마스터 태그 순서대로:
+- 같은 태그에 여러 플러그인이 기여하면 한 섹션에 모은다.
+- 태그 내 컨텐츠 순서는 너의 재량이다. 논리적 묶음·중요도로 결정한다.
+- 기여 컨텐츠 없는 태그는 placeholder 주석으로 자리 유지한다.
+  ```
+  <!-- <skills></skills> -->
+  ```
+
+### 6-4. rule / lang 영역
+
+```
+# Rules
+
+## <fragment name>
+(fragment 본문, frontmatter 제외)
+
+# Languages
+
+## <fragment name>
+(fragment 본문, frontmatter 제외)
+```
+
+### 6-5. 입력 해시 계산
+
+다음을 정규화된 JSON 으로 직렬화 후 SHA-256:
+```json
+{
+  "plugins": [{name, installPath, templateBody}, ...],
+  "selections": {
+    "plugins": [...selected names],
+    "rules": [...selected fragment names],
+    "langs": [...selected fragment names]
+  }
+}
+```
+
+Bash 로 계산:
+```bash
+echo -n '<직렬화된 JSON>' | sha256sum
+```
+
+또는 임시 파일 작성 후 `sha256sum <file>`.
+
+---
+
+## 7. 멱등성 판정
+
+기존 산출물의 `<!-- HVE:HASH:sha256-... -->` 추출 — **반드시 `cat` 으로** (Read 도구는 HTML 주석 strip).
+
+```bash
+cat ~/.claude/CLAUDE.md  # 또는 ./CLAUDE.md
+```
+
+비교:
+- 해시 일치 → "변경 없음" 보고하고 종료. write skip.
+- 해시 불일치 (또는 마커 없음) → 산출 진행.
+
+---
+
+## 8. 산출
+
+### 8-1. 백업
+
+기존 산출물 존재 시 `.bak` 으로 이동:
+- `~/.claude/CLAUDE.md` → `~/.claude/CLAUDE.md.bak`
+- `<cwd>/CLAUDE.md` → `<cwd>/CLAUDE.md.bak`
+
+기존 `.bak` 이 이미 있으면 AskUserQuestion 으로 처리 방법 질문 (덮어쓰기 / 다른 이름 / 중단).
+
+### 8-2. Global 모드 — 마커 블록
+
+```
+<!-- HVE:START -->
+<!-- HVE:VERSION:1 -->
+<!-- HVE:GENERATED-AT:<ISO-8601 UTC> -->
+<!-- HVE:PLUGINS: <name1>, <name2>, ... -->
+<!-- HVE:HASH:sha256-<hex> -->
+
+# hve marketplace
+
+(XML 태그 합성 본문 — 마스터 순서)
+
+# Rules
+
+(rule 본문)
+
+# Languages
+
+(lang 본문, 선택 시)
+
+<!-- HVE:END -->
+```
+
+블록 위치:
+- 기존 마커 없음 (또는 파일 자체 없음) → 파일 **최상단 prepend** (또는 마커 블록만으로 새 파일 생성)
+- 기존 마커 있음 → 마커 위치 그대로, 안만 교체. 마커 바깥 (위·아래) 사용자 컨텐츠 보존.
+
+### 8-3. Project 모드 — 전체 파일
+
+```
+# CLAUDE.md
+
+<!-- HVE:VERSION:1 -->
+<!-- HVE:GENERATED-AT:<ISO-8601 UTC> -->
+<!-- HVE:PLUGINS: ... -->
+<!-- HVE:HASH:sha256-... -->
+
+(XML 태그 합성 본문)
+
+# Rules
+...
+
+# Languages
+...
+```
+
+전체 교체.
+
+---
+
+## 9. 보고
+
+1~2줄 요약:
+- 모드 (Global/Project)
+- 포함된 플러그인 수, rule 수, lang 수
+- 백업 파일 경로 (있는 경우)
+- 본문 변경 여부 (write 했는지 / skip 했는지)
+
+---
+
+## 원본 검수 — `cat` 필수
+
+기존 산출물의 마커·메타 주석을 확인할 때 **Read 도구는 HTML 주석을 strip** 한다. **반드시 Bash `cat` 사용.**
+
+```bash
+cat ~/.claude/CLAUDE.md
+cat ./CLAUDE.md
+```
+
+Node 스크립트는 `fs.readFile` 직접 사용 → 영향 없음.
+
+---
 
 ## 빈 결과 처리
 
-매칭 결과 부합·불확실 fragment 가 0 개이면, 합성하지 않고 사용자에게 한 줄로 보고한다. 빈 CLAUDE.md 를 만들지 않는다.
+플러그인 0 + rule 0 + lang 0 → 합성 본문이 모두 placeholder 주석뿐. 이 경우:
+- 1줄 보고: "선택된 컨텐츠 없음. 산출물 만들지 않음."
+- 파일 갱신 skip
+
+---
+
+## 주의사항
+
+마커 안 본문은 다음 실행 시 덮어쓴다. 사용자에게 추가 메모는 마커 바깥에 두도록 안내한다.
+
+`cwd === os.homedir()` 인 경우 항상 Global 모드로 진입한다. home 디렉터리에서는 Project 모드 우회가 불가능하다.
+
+XML 태그는 단순 컨벤션만 사용한다. nested, 속성, CDATA 는 파싱하지 않는다.
+
+태그 내 정렬은 너의 재량이라 출력이 미세하게 달라질 수 있다. 멱등성 판정은 입력 해시 기준이므로 write skip 동작에 영향이 없다.
 
 </init_context_instruction>
 
