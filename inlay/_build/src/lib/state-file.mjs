@@ -62,7 +62,7 @@ export function loadCache({ projectRoot, sessionId, agentId }) {
 
 export function loadCacheForStop({ projectRoot, sessionId }) {
   // WHY: Stop 훅은 메인 컨텍스트에서만 발화하지만 서브에이전트가 만진
-  //      캡슐도 함께 검사해야 미갱신 누락이 없다. 같은 session_id 의 own
+  //      inlay 도 함께 검사해야 미갱신 누락이 없다. 같은 session_id 의 own
   //      파일 (`${sessionId}-*.json`) 을 모두 union 한다. stopHookFired
   //      플래그는 메인 파일 값만 — 잔소리 1회 차단은 메인 책임이다.
   const dir = getCacheDir(projectRoot);
@@ -102,7 +102,7 @@ export function saveCache(updates, { projectRoot, sessionId, agentId }) {
 export function compactReset({ projectRoot, sessionId, agentId }) {
   const path = targetFile(projectRoot, sessionId, agentId);
   const cur = readJsonOrEmpty(path);
-  // WHY: 압축 후 캡슐 메시지가 사라졌으므로 다음 PreToolUse 가 풀 chain
+  // WHY: 압축 후 inlay 메시지가 사라졌으므로 다음 PreToolUse 가 풀 chain
   //      을 다시 emit 해야 한다. stopHookFired 는 세션 자체 1 회 발화
   //      플래그라 압축 무관하게 보존.
   const next = { hashes: {}, tracking: {}, stopHookFired: cur.stopHookFired };
