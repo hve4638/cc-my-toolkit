@@ -1,5 +1,5 @@
 {
-  "description": "frame hook chain — SessionStart instruction inject, PreToolUse rule reminder, Stop context guard",
+  "description": "frame hook chain — SessionStart instruction inject, PreToolUse rule reminder, Stop force-continue",
   "hooks": {
     "SessionStart": [
       {
@@ -26,16 +26,6 @@
       }
     ],
     "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PLUGIN_ROOT\"/scripts/run.cjs \"$CLAUDE_PLUGIN_ROOT\"/scripts/context-guard-stop.mjs",
-            "timeout": 5
-          }
-        ]
-      },
       {
         "matcher": "*",
         "hooks": [
