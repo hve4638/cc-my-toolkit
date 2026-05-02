@@ -27,10 +27,10 @@ Specialized (sonnet): designer, git-master
 </agent_catalog>
 
 <tools>
-MCP tools provided by frame:
+MCP tools provided by core:
 - LSP — `lsp_hover`, `lsp_goto_definition`, `lsp_find_references`, `lsp_diagnostics`, `lsp_workspace_symbols`, `lsp_document_symbols`, `lsp_rename`, `lsp_code_actions`, etc.
 - AST — `ast_grep_search`, `ast_grep_replace`
-Run `/frame-setup` once to install the `@ast-grep/napi` global dependency before using AST tools.
+Run `/core-setup` once to install the `@ast-grep/napi` global dependency before using AST tools.
 </tools>
 
 <verification>

@@ -1,7 +1,7 @@
 {
-  "name": "frame-plugin",
-  "version": "0.1.0",
-  "description": "Build workspace for frame@hve MCP server (LSP + AST Grep tools)",
+  "name": "core-plugin",
+  "version": "0.2.0",
+  "description": "Build workspace for core@hve MCP server (LSP + AST Grep tools)",
   "type": "module",
   "private": true,
   "scripts": {

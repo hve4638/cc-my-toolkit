@@ -1,7 +1,7 @@
 {
-  "name": "frame",
-  "version": "0.1.0",
-  "description": "Lightweight runtime framework — hook-based rule injection, rule-file auto-loading, context guard",
+  "name": "core",
+  "version": "0.2.0",
+  "description": "Base bundle — runtime hooks, MCP (LSP + AST grep), 19 generic agents, and common slash skills (commit/PR, review, handoff, docs, rules)",
   "author": {
     "name": "Hve"
   },

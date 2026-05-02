@@ -27,10 +27,10 @@ SDK 사용이 불확실하면 `document-specialist`.
 </agent_catalog>
 
 <tools>
-frame 이 제공하는 MCP 툴:
+core 가 제공하는 MCP 툴:
 - LSP — `lsp_hover`, `lsp_goto_definition`, `lsp_find_references`, `lsp_diagnostics`, `lsp_workspace_symbols`, `lsp_document_symbols`, `lsp_rename`, `lsp_code_actions` 등
 - AST — `ast_grep_search`, `ast_grep_replace`
-사용 전 `/frame-setup` 으로 `@ast-grep/napi` 전역 설치 필요.
+사용 전 `/core-setup` 으로 `@ast-grep/napi` 전역 설치 필요.
 </tools>
 
 <verification>

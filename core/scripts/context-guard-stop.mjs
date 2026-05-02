@@ -6,7 +6,7 @@
  * threshold, suggesting a session refresh. Does NOT block by default —
  * flip BLOCK_WHEN_OVER to `true` to force Claude to continue-with-refresh.
  *
- * Threshold via env `FRAME_CONTEXT_GUARD_BYTES` (default: 500_000 bytes
+ * Threshold via env `CORE_CONTEXT_GUARD_BYTES` (default: 500_000 bytes
  * of transcript file). Never blocks context_limit or user-cancel stops.
  */
 
@@ -30,7 +30,7 @@ async function main() {
     return;
   }
 
-  const threshold = parseInt(process.env.FRAME_CONTEXT_GUARD_BYTES ?? '', 10) || DEFAULT_THRESHOLD_BYTES;
+  const threshold = parseInt(process.env.CORE_CONTEXT_GUARD_BYTES ?? '', 10) || DEFAULT_THRESHOLD_BYTES;
   const transcriptPath = data?.transcript_path;
   let size = 0;
   if (transcriptPath && existsSync(transcriptPath)) {

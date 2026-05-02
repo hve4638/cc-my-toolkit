@@ -6,9 +6,8 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 
 | 이름 | 설명 |
 |---|---|
-| [`common`](./common) | 공통 유틸 스킬 (setup, docs, rules, commit/PR, review) |
-| [`frame`](./frame) | 런타임 프레임워크 — 범용 에이전트 19 + 훅 기반 규칙 리마인더·컨텍스트 가드 + MCP 서버 (LSP 12 + AST Grep 2) |
-| [`patchwork`](./patchwork) | 코드 작업 방법론 가드레일 — 컨텍스트 캡슐 (CONTEXT.md), 의도 주석 (`WHY:`), 도메인 용어 |
+| [`core`](./core) | 기본 번들 — 범용 에이전트 19 + 훅 기반 규칙 리마인더·컨텍스트 가드 + MCP 서버 (LSP 12 + AST Grep 2) + 공통 슬래시 스킬 (commit/PR, review, handoff, docs, rules) |
+| [`inlay`](./inlay) | 코드 작업 방법론 가드레일 — inlay (INLAY.md), 의도 주석 (`WHY:`), 도메인 용어 |
 | [`expert`](./expert) | 고급·특수 툴 — Python REPL MCP. 향후 ralph 같은 무거운 워크플로 스킬 예정 |
 | [`hud`](./hud) | statusline — git/ctx%/rate-limit/모델명/subagent 트리 |
 | [`research`](./research) | 리서치 워크플로 (journal, plan, report, commit) |
@@ -22,9 +21,8 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 /plugin marketplace add https://github.com/hve4638/hve-cc-marketplace
 
 # 2. 원하는 플러그인 설치
-/plugin install common@hve
-/plugin install frame@hve
-/plugin install patchwork@hve
+/plugin install core@hve
+/plugin install inlay@hve
 /plugin install expert@hve
 /plugin install hud@hve
 /plugin install research@hve
@@ -36,8 +34,7 @@ Claude Code 용 개인 플러그인 마켓플레이스.
 
 | 플러그인 | 후속 명령 |
 |---|---|
-| common | `/hve:hve-setup` — Codex CLI 설치 + Codex MCP 등록 (user 스코프) |
-| frame | `/hve:frame-setup` — `@ast-grep/napi@0.41.1` 글로벌 설치 |
+| core | `/hve:core-setup` — `@ast-grep/napi@0.41.1` 글로벌 설치 + Codex CLI 설치 + Codex MCP 등록 (user 스코프) |
 | hud | `/hve:hud setup` — statusline wrapper + settings.json 등록 |
 
 ## 갱신

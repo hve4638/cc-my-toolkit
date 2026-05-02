@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * frame native dependency installer.
+ * core native dependency installer.
  *
  * Installs `@ast-grep/napi` globally via npm so the MCP server bundle
  * (`bridge/mcp-server.cjs`) can resolve it at runtime via the banner's
@@ -16,7 +16,7 @@ const VERSION = '0.41.1';
 const SPEC = `${PKG}@${VERSION}`;
 
 function log(msg) {
-  console.log(`[frame] ${msg}`);
+  console.log(`[core] ${msg}`);
 }
 
 function run(cmd, opts = {}) {
@@ -26,7 +26,7 @@ function run(cmd, opts = {}) {
 function checkNode() {
   const major = Number(process.versions.node.split('.')[0]);
   if (major < 18) {
-    console.error(`[frame] ERROR: Node.js >= 18 required. Found: ${process.version}`);
+    console.error(`[core] ERROR: Node.js >= 18 required. Found: ${process.version}`);
     process.exit(1);
   }
   log(`Node ${process.version} OK`);
@@ -37,8 +37,8 @@ function ensureNpm() {
     const v = run('npm --version');
     log(`npm ${v} OK`);
   } catch {
-    console.error('[frame] ERROR: `npm` not found in PATH.');
-    console.error('[frame]   Install Node.js (which includes npm) and retry.');
+    console.error('[core] ERROR: `npm` not found in PATH.');
+    console.error('[core]   Install Node.js (which includes npm) and retry.');
     process.exit(1);
   }
 }
@@ -60,11 +60,11 @@ function install() {
     log(`Installed ${SPEC}`);
   } catch (err) {
     console.error('');
-    console.error(`[frame] ERROR: Global install failed.`);
-    console.error('[frame]   This usually means npm cannot write to its global prefix.');
-    console.error('[frame]   Retry with one of:');
-    console.error(`[frame]     sudo npm install -g ${SPEC}`);
-    console.error(`[frame]     # or configure a user-level npm prefix: https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally`);
+    console.error(`[core] ERROR: Global install failed.`);
+    console.error('[core]   This usually means npm cannot write to its global prefix.');
+    console.error('[core]   Retry with one of:');
+    console.error(`[core]     sudo npm install -g ${SPEC}`);
+    console.error(`[core]     # or configure a user-level npm prefix: https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally`);
     process.exit(1);
   }
 }
