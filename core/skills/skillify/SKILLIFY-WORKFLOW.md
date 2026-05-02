@@ -32,7 +32,7 @@ Agree with the user.
 
 - kebab-case, ≤30 characters, English
 - If a family exists, use a prefix (`reflect-*`, `rule-*`)
-- Good: `git-rebase-no-edit-flag`, `codex-call`
+- Good: `git-rebase-no-edit-flag`, `codex-mcp-guide`
 - Bad: `general-tips`, `mistakes`, `learning-20260430`
 
 ---

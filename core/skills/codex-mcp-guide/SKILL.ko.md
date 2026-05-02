@@ -1,6 +1,6 @@
 ---
-name: codex-call
-description: "`mcp__codex__codex` MCP 도구를 호출하려는 모든 상황에서 반드시 먼저 확인한다. 직접 호출, cross-review, ccg, 그리고 codex 에 위임하는 모든 subagent / 워크플로우 — 이 모두에 적용된다. 이 스킬을 거치지 않은 codex 호출은 무효 호출로 간주한다."
+name: codex-mcp-guide
+description: "`mcp__codex__codex` MCP 도구를 호출하기 전에 반드시 이 스킬을 확인한다."
 ---
 
 ## Rule

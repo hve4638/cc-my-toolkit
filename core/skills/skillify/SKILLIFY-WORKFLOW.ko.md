@@ -32,7 +32,7 @@
 
 - kebab-case, 30자 이내, 영문
 - 가족이 있으면 prefix (`reflect-*`, `rule-*`)
-- 좋음: `git-rebase-no-edit-flag`, `codex-call`
+- 좋음: `git-rebase-no-edit-flag`, `codex-mcp-guide`
 - 나쁨: `general-tips`, `mistakes`, `learning-20260430`
 
 ---
