@@ -1,29 +1,27 @@
 ---
 name: pickup
-description: "Load context from a previous handoff folder into the current session. If multiple handoff folders exist, show them newest-first and ask the user to choose; if exactly one, load it immediately. After a successful load, move the folder into _archive/ so it does not re-surface. Pair skill to handoff; explicit invocation only."
+disable-model-invocation: true
 ---
 
 <pickup_instruction>
 # pickup
 
-Read context from a previous handoff and resume it in the current session.
-
-After picking up, briefly summarize the loaded content and do not proceed with the work itself.
+Pick a previous handoff folder, read `INDEX.md` first, and show the user a brief summary only. Do not proceed with the work itself until the user explicitly directs you to.
 
 ---
 
 ## Flow
 
 ### 1. Scan candidates
-Enumerate the direct subfolders of `.agent-memory/handoff/`. **Exclude** `_archive/`.
+Enumerate the direct subfolders of `.agent-memory/handoff/`. Exclude `_archive/`.
 
 - Lexicographic sort on folder names suffices to find the latest (timestamps are the prefix, so chronological order follows).
 - Do not use symlinks or pointer files (cross-platform portability).
 
 ### 2. Select
-- **0 candidates** → tell the user there is nothing to pick up, and stop.
-- **1 candidate** → load immediately (skip confirmation).
-- **2+ candidates** → present them newest-first and ask the user to choose.
+- 0 candidates → tell the user there is nothing to pick up, and stop.
+- 1 candidate → load immediately (skip confirmation).
+- 2+ candidates → present them newest-first and ask the user to choose.
 
 #### Candidate listing format
 ```
@@ -48,6 +46,18 @@ After confirming a successful load, move the folder into `.agent-memory/handoff/
 
 ---
 
+## "What's next" answer rule
+
+When the user asks something like "what's next", "where do I pick up", or "continue from where" without naming a target, **draw only from the "Next moves" section of the file marked as `current context` in INDEX.md**.
+
+- If another file shows a "Next moves" entry but is `[done]`, do not propose it — the work is already finished.
+- If the current context is `none (session closed)`, answer "no active work to resume" and ask the user for fresh direction.
+- If the handoff is missing the current-context marker (legacy), ask the user which file to continue — never guess.
+
+This works together with the no-auto-execute rule at the top of the skill: show the summary, then apply the rule above only after the user explicitly asks for the next move.
+
+---
+
 ## Re-load policy
 
 Archived handoffs are excluded from candidate scanning by default. (Except when the user mentions one directly.)
@@ -56,8 +66,8 @@ Archived handoffs are excluded from candidate scanning by default. (Except when 
 
 ## Boundaries
 
-- **handoff** — the saving counterpart.
-- **pickup** — the restoring counterpart.
+- handoff — the saving counterpart.
+- pickup — the restoring counterpart.
 - Does not interfere with other session-continuity mechanisms.
 </pickup_instruction>
 

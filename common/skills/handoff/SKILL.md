@@ -1,24 +1,22 @@
 ---
 name: handoff
-description: "Invoke when the user wants to wrap up the current session and hand off context to the next Claude session. Trigger examples: 'handoff', 'wrap up session', 'end session', 'pass session along', 'hand over to next session'. Splits the current session's work by cohesion and writes task-unit documents under .agent-memory/handoff/. Do NOT invoke for plain summary requests or for saving permanent project knowledge (MEMORY.md territory)."
+disable-model-invocation: true
 ---
 
 <handoff_instruction>
 # handoff
 
-Save the current session's work context as task-unit documents so the next Claude session can read them and continue.
-
-**Intended reader**: a next-session Claude with zero context. Not a human.
+Split the current session's work context by task and store each unit under `.agent-memory/handoff/`. Write so a zero-context next-session Claude can resume immediately (not a human-style summary).
 
 ---
 
 ## Storage layout
 
-- **Path**: `.agent-memory/handoff/YYYY-MM-DDThhmm_<title-slug>/`
-- **Title slug**: kebab-case, up to 40 characters, Korean allowed. Use `mixed` when the session is a genuinely heterogeneous.
-- **File names**: `INDEX.md` plus `NN-<slug>.md` (two-digit zero-padded, e.g., `01-foo.md`).
-- **Accumulation**: never overwrite — every call creates a new folder.
-- **Timestamp**: obtain current time via `date +"%Y-%m-%dT%H%M"` or equivalent.
+- Path: `.agent-memory/handoff/YYYY-MM-DDThhmm_<title-slug>/`
+- Title slug: kebab-case, up to 40 characters, Korean allowed. Use `mixed` when the session is genuinely heterogeneous.
+- File names: `INDEX.md` plus `NN-<slug>.md` (two-digit zero-padded, e.g., `01-foo.md`).
+- Accumulation: never overwrite — every call creates a new folder.
+- Timestamp: obtain current time via `date +"%Y-%m-%dT%H%M"` or equivalent.
 
 ---
 
@@ -48,16 +46,16 @@ Write immediately to `.agent-memory/handoff/<timestamp>_<title>/`. No separate f
 
 ## Splitting principle
 
-- No fixed section structure — split **by task cohesion**.
-- Cohesive tasks → one file. Genuinely independent tasks → separate files.
-- The right sizing check: "Is each file understandable on its own to a zero-context next-session Claude?"
+- No fixed section structure → split by task cohesion.
+- Cohesive tasks = one file. Genuinely independent tasks = separate files.
+- Right sizing check: "Is each file understandable on its own to a zero-context next-session Claude?"
 
 ### Suggested sections per task document (loose, omit when empty)
-- **Intent** — what the user was trying to do, and why
-- **Progress so far** — chronological trace
-- **Decisions and reasoning** — options / the choice / the reason (guards against rollback)
-- **Open issues** — unresolved / blockers / awaiting answer
-- **Next moves** — immediately executable actions
+- Intent — what the user was trying to do, and why
+- Progress so far — chronological trace
+- Decisions and reasoning — options / the choice / the reason (guards against rollback)
+- Open issues — unresolved / blockers / awaiting answer
+- Next moves — immediately executable actions. **Record only on the single task that was active at session end.** Never include this section on completed task files (prevents pickup from re-suggesting finished work).
 
 ### Writing rules
 - No copy-pasted code blocks.
@@ -68,19 +66,20 @@ Write immediately to `.agent-memory/handoff/<timestamp>_<title>/`. No separate f
 
 ## INDEX.md
 
-Always generate. Serves as the next-session Claude's entry point.
+Always generate. The next-session Claude's entry point.
 
-- Task list (file name + one-line summary)
+- Task list (file name + one-line summary). Tag each entry with a `[done]` / `[active]` status marker. Exactly one `[active]` (or zero — when the session ends naturally).
 - Priorities / dependencies
 - Explicit guidance on where to begin reading
+- Current context — name the single file marked `[active]`. **The sole source pickup uses to answer "what's next"**. If no active work, state `none (session closed)`.
 
 ---
 
 ## No filesystem exploration (soft rule)
 
-Handoff curates **only what the current session already knows**. Prevents leaking information from outside the session context.
+Handoff curates only what the current session already knows. Prevents leaking information from outside the session context.
 
-**Exceptions** (exploration allowed):
+Exceptions (exploration allowed):
 - Resolving an ambiguity or contradiction
 - When the user explicitly instructs exploration
 
@@ -88,11 +87,11 @@ Handoff curates **only what the current session already knows**. Prevents leakin
 
 ## Boundaries
 
-- **patchwork** — methodology guardrails for writing code
-- **handoff** — inter-session context transfer (explicit invocation, one-shot)
-- **MEMORY.md** — permanent project knowledge (automatic)
+- inlay — methodology guardrails for writing code
+- handoff — inter-session context transfer (explicit invocation, one-shot)
+- MEMORY.md — permanent project knowledge (automatic)
 
-Handoff is session-scoped. If a piece of content belongs to permanent project knowledge, promote it to memory separately.
+If a piece of handoff content belongs to permanent project knowledge, promote it to memory separately. Handoff itself is session-scoped.
 </handoff_instruction>
 
 $ARGUMENTS
